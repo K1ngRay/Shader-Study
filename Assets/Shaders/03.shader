@@ -8,18 +8,27 @@ Shader "hqr/003 Shader"{
 #pragma vertex vert
 #pragma fragment frag
 
+		//application to vert
 		struct a2v {
 			float4 vertex : POSITION; //告诉Unity把模型空间下的顶点坐标填充给vertex
 			float3 normal : NORMAL;	//告诉Unity把模型空间下的法线方向填充给normal
 			float4 texcoord : TEXCOORD0; //告诉Unity把第一套纹理坐标填充给texcoord
 		};
 
-		float4 vert(a2v v) : SV_POSITION {
-			return UnityObjectToClipPos(v.vertex);
+		struct v2f {
+			float4 position : SV_POSITION;
+			float3 tmp : COLOR0;
+		};
+
+		v2f vert(a2v v) {
+			v2f f;
+			f.position = UnityObjectToClipPos(v.vertex);
+			f.tmp = v.normal;
+			return f;
 		}
 
-		fixed4 frag() : SV_Target {
-			return fixed4(.5,1,1,1);
+		fixed4 frag(v2f f) : SV_Target {
+			return fixed4(f.tmp,1);
 		}
 
 	ENDCG

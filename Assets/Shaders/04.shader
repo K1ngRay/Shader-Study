@@ -18,7 +18,7 @@ Shader "hqr/004 Shader"{
 #include "Lighting.cginc" 
 #pragma vertex vert
 #pragma fragment frag
-		fixed4 _Color
+		fixed4 _Color=fixed4(1,1,1,1);
 		struct a2v {
 			float4 vertex : POSITION; //告诉Unity把模型空间下的顶点坐标填充给vertex
 			float3 normal : NORMAL;	//告诉Unity把模型空间下的法线方向填充给normal

@@ -32,11 +32,13 @@ Shader "hqr/004 Shader"{
 		v2f vert(a2v v) {
 			v2f f;
 			f.position = UnityObjectToClipPos(v.vertex);
+
+			fixed3 ambient = UNITY_LIGHTMODEL_AMBIENT.rgb; 
 			
 			fixed3 normalDir = normalize(mul(v.normal, (float3x3) unity_WorldToObject)); //unity_WorldToObject 用于装换为世界坐标的四维矩阵
 			fixed3 lightDir = normalize(_WorldSpaceLightPos0.xyz);
 			fixed3 diffuse = _LightColor0.rgb*max(dot(normalDir, lightDir), 0)*_Color.rgb;
-			f.color = diffuse;
+			f.color = diffuse + ambient;
 			return f;
 		}
 

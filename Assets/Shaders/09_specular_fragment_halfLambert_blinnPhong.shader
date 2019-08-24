@@ -2,7 +2,7 @@
 
 // Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
 
-Shader "hqr/007 Shader"{
+Shader "hqr/009 Shader"{
 	Properties{
 		_DiffuseColor("Diffuse Color",Color) = (1,1,1,1)
 		_SpecularColor("Specular Color",Color) = (1,1,1,1)
@@ -31,32 +31,42 @@ Shader "hqr/007 Shader"{
 
 		struct v2f {
 			float4 position : SV_POSITION;
-			float3 color : COLOR;
+			float3 worldNormal : TEXCOORD0;
+			float4 worldVertex : TEXCOORD1;
 		};
 
 		v2f vert(a2v v) {
 			v2f f;
 			f.position = UnityObjectToClipPos(v.vertex);
+			//f.worldNormal = mul(v.normal, (float3x3) unity_WorldToObject);
+			f.worldNormal = UnityObjectToWorldNormal(v.normal);
+			f.worldVertex = mul(v.vertex, unity_WorldToObject);
 
-			//环境光
-			fixed3 ambient = UNITY_LIGHTMODEL_AMBIENT.rgb; 
-
-			//漫反射
-			fixed3 normalDir = normalize(mul(v.normal, (float3x3) unity_WorldToObject)); //unity_WorldToObject 用于装换为世界坐标的四维矩阵
-			fixed3 lightDir = normalize(_WorldSpaceLightPos0.xyz);
-			fixed3 diffuse = _LightColor0.rgb*max(dot(normalDir, lightDir), 0)*_DiffuseColor.rgb;
-
-			//高光反射
-			fixed3 reflectDir = normalize(reflect(-lightDir, normalDir));
-			fixed3 viewDir = normalize(_WorldSpaceCameraPos.xyz - mul(v.vertex, (float3x3) unity_WorldToObject).xyz);
-			fixed3 specular = _LightColor0.rgb * pow(max(dot(reflectDir, viewDir), 0), _Gloss) *_SpecularColor.rgb;
-
-			f.color = diffuse + ambient + specular;
 			return f;
 		}
 
 		fixed4 frag(v2f f) : SV_Target {
-			return fixed4(f.color,1);
+
+			//环境光
+			fixed3 ambient = UNITY_LIGHTMODEL_AMBIENT.rgb;
+
+			//漫反射
+			fixed3 normalDir = normalize(f.worldNormal); //unity_WorldToObject 用于装换为世界坐标的四维矩阵
+			fixed3 lightDir = normalize(_WorldSpaceLightPos0.xyz);
+			float3 halfLambert = dot(normalDir, lightDir) * 0.5 + 0.5;
+			fixed3 diffuse = _LightColor0.rgb*halfLambert*_DiffuseColor.rgb;
+
+			//高光反射
+			//fixed3 reflectDir = normalize(reflect(-lightDir, normalDir));
+			//fixed3 viewDir = normalize(_WorldSpaceCameraPos.xyz - f.worldVertex);
+			fixed3 viewDir = normalize(UnityWorldSpaceViewDir(f.worldVertex));
+			fixed3 halfDir = normalize(lightDir + viewDir);
+			fixed3 specular = _LightColor0.rgb * pow(max(dot(normalDir, halfDir), 0), _Gloss) *_SpecularColor.rgb;
+
+			fixed3 color = diffuse + ambient + specular;
+
+
+			return fixed4(color,1);
 		}
 
 	ENDCG
